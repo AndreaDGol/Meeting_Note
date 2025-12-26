@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+uploads/
+processed/
+notes.db
+*.db
+.env
+notes-app-deploy.tar.gz

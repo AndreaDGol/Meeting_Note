@@ -1,0 +1,25 @@
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+env/
+.env
+*.db
+*.sqlite
+uploads/*
+processed/*
+.git
+.gitignore
+README.md
+ML files/
+*.pdf
+.pytest_cache
+.coverage
+htmlcov/
+test_*.py
+PDF_USAGE.md
+
+
+

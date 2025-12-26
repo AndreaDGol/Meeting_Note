@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Handwritten Notes Processing Agents</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(180deg, #FFFFFF 0%, #E8F4F8 100%);
+        }
+        .card-hover {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .upload-area {
+            border: 2px dashed #cbd5e0;
+            transition: border-color 0.2s ease-in-out;
+        }
+        .upload-area:hover {
+            border-color: #667eea;
+        }
+        .upload-area.dragover {
+            border-color: #667eea;
+            background-color: #f7fafc;
+        }
+        [contenteditable][data-placeholder]:empty:before {
+            content: attr(data-placeholder);
+            color: #9ca3af;
+            pointer-events: none;
+        }
+    </style>
+    <!-- Markdown parser for converting markdown to HTML -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- VERSION: 2024-12-24-GRAPH-API-FIX -->
+</head>
+<body class="gradient-bg h-screen flex flex-col overflow-hidden">
+    <!-- Header -->
+    <header class="bg-transparent text-gray-800 shadow-md border-b border-gray-200">
+        <div class="container mx-auto px-4 py-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-pen-fancy text-3xl"></i>
+                    <h1 class="text-3xl font-bold">Handwritten Note Processing Agents</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <!-- Buttons removed per user request -->
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content - Split Screen -->
+    <main class="flex-1 flex overflow-hidden">
+        <!-- Left Side - Original Handwritten Note -->
+        <div class="w-1/2 border-r border-gray-200 bg-gray-50 flex flex-col">
+            <div class="bg-white border-b border-gray-200 p-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">Original Handwritten Note</h2>
+                <p class="text-sm text-gray-600">Upload or drag & drop your handwritten note</p>
+            </div>
+            
+            <div class="flex-1 overflow-auto p-6">
+                <!-- Upload Area (shown initially) -->
+                <div id="uploadContainer" class="h-full flex flex-col">
+                    <div id="uploadArea" class="upload-area rounded-lg flex-1 flex flex-col items-center justify-center cursor-pointer min-h-96">
+                        <div class="text-center">
+                            <div class="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <i class="fas fa-file-pdf text-4xl text-blue-600"></i>
+                            </div>
+                            <p class="text-lg font-semibold text-gray-700 mb-2">Drag and drop your handwritten note here</p>
+                            <p class="text-sm text-gray-500 mb-4">or click to browse files (PDF)</p>
+                            <input type="file" id="fileInput" accept=".pdf" class="hidden">
+                            <button id="uploadBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition">
+                                <i class="fas fa-folder-open mr-2"></i>Choose File
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Upload Progress -->
+                    <div id="uploadProgress" class="hidden mt-4">
+                        <div class="bg-gray-200 rounded-full h-3 relative">
+                            <div id="progressBar" class="bg-blue-600 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
+                            <span id="progressPercent" class="absolute inset-0 flex items-center justify-center text-xs font-semibold text-gray-700">0%</span>
+                        </div>
+                        <p id="progressText" class="text-sm text-gray-600 mt-2 text-center">Processing...</p>
+                    </div>
+                    
+                    <!-- PDF Viewer (shown after upload) -->
+                    <div id="pdfViewerContainer" class="hidden h-full">
+                        <div class="bg-white border border-gray-300 rounded-lg overflow-hidden" style="height: calc(100vh - 200px); min-height: 500px;">
+                            <iframe id="pdfViewer" type="application/pdf" class="w-full h-full border-0" style="min-height: 500px;"></iframe>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right Side - Digital Version -->
+        <div class="w-1/2 bg-white flex flex-col min-h-0">
+            <div class="border-b border-gray-200 p-6">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800 mb-2">Digital Version</h2>
+                        <p class="text-sm text-gray-600">Edit and format your transcribed text</p>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button id="outlookEmailBtn" class="hidden bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition flex items-center">
+                            <i class="fas fa-envelope mr-2"></i>Create Outlook Email
+                        </button>
+                        <button id="copyBtn" class="hidden bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition flex items-center">
+                            <i class="fas fa-copy mr-2"></i>Copy
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Formatting Toolbar -->
+            <div id="toolbarContainer" class="hidden border-b border-gray-200 p-4 bg-gray-50">
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center space-x-2">
+                        <label for="fontSelect" class="text-sm font-medium text-gray-700">Font:</label>
+                        <select id="fontSelect" class="border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="Calibri">Calibri</option>
+                            <option value="Arial">Arial</option>
+                            <option value="Times New Roman">Times New Roman</option>
+                            <option value="Helvetica">Helvetica</option>
+                            <option value="Georgia">Georgia</option>
+                            <option value="Courier New">Courier New</option>
+                            <option value="Verdana">Verdana</option>
+                            <option value="Monaco">Monaco</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <label for="sizeSelect" class="text-sm font-medium text-gray-700">Size:</label>
+                        <select id="sizeSelect" class="border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="8">8pt</option>
+                            <option value="9">9pt</option>
+                            <option value="10">10pt</option>
+                            <option value="11" selected>11pt</option>
+                            <option value="12">12pt</option>
+                            <option value="14">14pt</option>
+                            <option value="16">16pt</option>
+                            <option value="18">18pt</option>
+                            <option value="20">20pt</option>
+                            <option value="24">24pt</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button id="boldBtn" class="px-3 py-2 border border-gray-300 rounded hover:bg-gray-100 transition font-bold" title="Bold">
+                            <strong>B</strong>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+                <!-- Text Editor -->
+                <div class="flex-1 overflow-hidden flex flex-col min-h-0">
+                    <div id="editorContainer" class="flex-1 p-6 overflow-hidden min-h-0">
+                        <div id="contentEditor" contenteditable="true" class="w-full p-4 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none whitespace-pre-wrap overflow-auto max-h-full" style="font-family: Calibri; font-size: 11pt; min-height: 300px;" data-placeholder="Your transcribed text will appear here...&#10;Upload a handwritten note to get started."></div>
+                    </div>
+                
+                    <!-- Status Bar -->
+                    <div class="border-t border-gray-200 px-6 py-3 bg-gray-50 flex justify-between items-center text-sm text-gray-600">
+                        <span id="wordCount">0 words</span>
+                    </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Note Detail Modal - Full Screen Split View -->
+    <div id="noteModal" class="hidden fixed inset-0 bg-gray-100 z-50 flex flex-col">
+        <!-- Header -->
+        <div class="bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+            <h3 id="modalTitle" class="text-xl font-bold text-gray-800"></h3>
+            <div class="flex items-center space-x-3">
+                <button id="saveBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition flex items-center">
+                    <i class="fas fa-save mr-2"></i>Save Changes
+                </button>
+                <button id="exportTxtBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition flex items-center">
+                    <i class="fas fa-download mr-2"></i>Export TXT
+                </button>
+                <button id="exportJsonBtn" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition flex items-center">
+                    <i class="fas fa-download mr-2"></i>Export JSON
+                </button>
+                <button id="closeModal" class="text-gray-500 hover:text-gray-700 px-3 py-2">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Split View Content -->
+        <div class="flex-1 flex overflow-hidden">
+            <!-- Left Side - PDF Viewer -->
+            <div class="w-1/2 border-r border-gray-200 bg-gray-50 flex flex-col">
+                <div class="p-2 bg-white border-b border-gray-200">
+                    <span class="text-sm text-gray-600">PDF Document</span>
+                </div>
+                <div class="flex-1 overflow-auto p-4">
+                    <iframe id="pdfViewer" class="w-full border border-gray-300 rounded-lg bg-white" style="height: calc(100vh - 150px); min-height: 500px;"></iframe>
+                </div>
+            </div>
+            
+            <!-- Right Side - Editable Content -->
+            <div class="w-1/2 bg-white flex flex-col">
+                <div class="p-4 border-b border-gray-200">
+                    <h4 class="font-semibold text-gray-800 mb-2">Extracted Content (Editable)</h4>
+                    <p class="text-xs text-gray-500">Edit the extracted text below. Click "Save Changes" to update.</p>
+                </div>
+                <div class="flex-1 p-4 overflow-auto">
+                    <textarea id="contentEditor" class="w-full h-full p-4 border border-gray-300 rounded-lg font-mono text-sm resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Content will appear here..."></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Modal -->
+    <div id="statsModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg max-w-2xl w-full">
+            <div class="p-6">
+                <div class="flex justify-between items-start mb-4">
+                    <h3 class="text-2xl font-bold text-gray-800">Statistics</h3>
+                    <button id="closeStatsModal" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <div id="statsContent" class="space-y-4">
+                    <!-- Statistics content will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentNoteId = null;
+        let currentNoteContent = '';
+
+        // DOM elements
+        const uploadArea = document.getElementById('uploadArea');
+        const uploadContainer = document.getElementById('uploadContainer');
+        const fileInput = document.getElementById('fileInput');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const uploadProgress = document.getElementById('uploadProgress');
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        const pdfViewerContainer = document.getElementById('pdfViewerContainer');
+        const pdfViewer = document.getElementById('pdfViewer');
+        const contentEditor = document.getElementById('contentEditor');
+        const wordCount = document.getElementById('wordCount');
+        const toolbarContainer = document.getElementById('toolbarContainer');
+        const fontSelect = document.getElementById('fontSelect');
+        const sizeSelect = document.getElementById('sizeSelect');
+        const boldBtn = document.getElementById('boldBtn');
+        const copyBtn = document.getElementById('copyBtn');
+        const outlookEmailBtn = document.getElementById('outlookEmailBtn');
+        const progressPercent = document.getElementById('progressPercent');
+        const statsModal = document.getElementById('statsModal');
+        const closeStatsModal = document.getElementById('closeStatsModal');
+        const statsContent = document.getElementById('statsContent');
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            setupEventListeners();
+            updateWordCount();
+        });
+
+        function setupEventListeners() {
+            // Upload functionality
+            uploadArea.addEventListener('click', () => fileInput.click());
+            uploadArea.addEventListener('dragover', handleDragOver);
+            uploadArea.addEventListener('dragleave', handleDragLeave);
+            uploadArea.addEventListener('drop', handleDrop);
+            fileInput.addEventListener('change', handleFileSelect);
+            uploadBtn.addEventListener('click', () => fileInput.click());
+
+            // Editor - handle placeholder for contenteditable
+            contentEditor.addEventListener('input', () => {
+                updateWordCount();
+            });
+            
+            // Handle placeholder for contenteditable div
+            contentEditor.addEventListener('focus', () => {
+                if (!contentEditor.textContent.trim() && contentEditor.dataset.placeholder) {
+                    contentEditor.textContent = '';
+                }
+            });
+            
+            contentEditor.addEventListener('blur', () => {
+                if (!contentEditor.textContent.trim() && contentEditor.dataset.placeholder) {
+                    contentEditor.textContent = '';
+                }
+            });
+
+            // Font and size selectors
+            fontSelect?.addEventListener('change', updateEditorStyle);
+            sizeSelect?.addEventListener('change', updateEditorStyle);
+            
+            // Bold button
+            boldBtn?.addEventListener('click', applyBoldFormatting);
+            
+            // Copy button
+            copyBtn?.addEventListener('click', copyEditorContent);
+            
+            // Outlook Email button
+            outlookEmailBtn?.addEventListener('click', createOutlookEmail);
+
+            // Close modals
+            closeStatsModal?.addEventListener('click', () => statsModal.classList.add('hidden'));
+            statsModal?.addEventListener('click', (e) => {
+                if (e.target === statsModal) statsModal.classList.add('hidden');
+            });
+        }
+
+        function updateEditorStyle() {
+            const font = fontSelect.value;
+            const size = sizeSelect.value;
+            contentEditor.style.fontFamily = font;
+            contentEditor.style.fontSize = size + 'pt';
+        }
+        
+        function applyBoldFormatting() {
+            document.execCommand('bold', false, null);
+            contentEditor.focus();
+            updateWordCount();
+        }
+        
+        // Convert HTML to RTF format with proper font support
+        function htmlToRtf(html, fontName = 'Calibri', fontSize = 11) {
+            // RTF header with font table
+            let rtf = '{\\rtf1\\ansi\\deff0\n';
+            
+            // Create font table - map font 0 to the actual font used
+            // Common fonts for Outlook compatibility
+            const fontMap = {
+                'calibri': 'Calibri',
+                'arial': 'Arial',
+                'times new roman': 'Times New Roman',
+                'times': 'Times New Roman',
+                'helvetica': 'Helvetica',
+                'georgia': 'Georgia',
+                'courier new': 'Courier New',
+                'courier': 'Courier New',
+                'verdana': 'Verdana',
+                'monaco': 'Monaco'
+            };
+            
+            // Normalize font name (lowercase, remove quotes, handle font stack)
+            let normalizedFont = fontName.toLowerCase().replace(/['"]/g, '').trim();
+            // If it's a font stack (e.g., "Calibri, Arial, sans-serif"), take the first one
+            normalizedFont = normalizedFont.split(',')[0].trim();
+            
+            // Find matching font in font map, or use the original if it's a standard Windows font
+            let rtfFontName = fontMap[normalizedFont];
+            if (!rtfFontName) {
+                // If not in map, try to use the font name directly (might work for standard fonts)
+                rtfFontName = fontName.split(',')[0].trim().replace(/['"]/g, '');
+            }
+            
+            // Ensure we have a valid font name
+            if (!rtfFontName || rtfFontName.length === 0) {
+                rtfFontName = 'Calibri';
+            }
+            
+            // RTF font size is in half-points (e.g., 11pt = 22 half-points)
+            const sizeNum = parseFloat(fontSize.toString().replace('pt', '').replace('px', '')) || 11;
+            const rtfFontSize = Math.round(sizeNum * 2);
+            
+            // Font table: \f0 = font 0 (default/primary font)
+            // CRITICAL FIX: Outlook requires font to be FIRST in font table and match \deff0
+            // The \deff0 in header ({\rtf1\ansi\deff0}) MUST match \f0 in font table
+            rtf += `{\\fonttbl{\\f0\\fnil\\fcharset0 Calibri;\\f1 Arial;\\f2 Times New Roman;}}\n`;
+            rtf += '{\\colortbl;\\red0\\green0\\blue0;}\n';
+            
+            // CRITICAL: \deff0 in header already set, now force font on every text segment
+            // Outlook may ignore font if not explicitly specified on every text piece
+            rtf += `\\f0\\fs${rtfFontSize} `;
+            
+            // Debug: verify RTF font is set correctly
+            console.log('RTF Header - Font:', 'Calibri (hardcoded with fnil)', 'Size:', rtfFontSize, 'RTF code: \\f0\\fs' + rtfFontSize);
+            
+            // Debug log (can be removed later)
+            console.log('RTF Conversion - Font:', rtfFontName, 'Size:', rtfFontSize, 'Half-points');
+            
+            // Clean HTML and convert to RTF
+            // Remove HTML comments and script tags
+            html = html.replace(/<!--[\s\S]*?-->/g, '');
+            html = html.replace(/<script[\s\S]*?<\/script>/gi, '');
+            
+            // Remove style attributes and inline styles (we set font in RTF header)
+            // This prevents style attributes from interfering with RTF conversion
+            html = html.replace(/style\s*=\s*["'][^"']*["']/gi, '');
+            
+            // Convert line breaks
+            html = html.replace(/<br\s*\/?>/gi, '\n');
+            html = html.replace(/<\/p>/gi, '\n');
+            html = html.replace(/<\/div>/gi, '\n');
+            
+            // Process text with formatting
+            // CRITICAL: Re-apply font after each formatting group in RTF
+            let inBold = false;
+            let i = 0;
+            
+            while (i < html.length) {
+                // Check for bold tags
+                if (html.substr(i, 3).toLowerCase() === '<b>') {
+                    if (!inBold) {
+                        // Open bold group AND explicitly force Calibri font (font 0)
+                        // CRITICAL: Must specify \f0 on every formatting change for Outlook
+                        rtf += `{\\b \\f0\\fs${rtfFontSize} `;
+                        inBold = true;
+                    }
+                    i += 3;
+                    continue;
+                }
+                
+                if (html.substr(i, 4).toLowerCase() === '</b>') {
+                    if (inBold) {
+                        rtf += '}';
+                        // After closing bold, re-apply Calibri font explicitly
+                        rtf += ` \\f0\\fs${rtfFontSize}`;
+                        inBold = false;
+                    }
+                    i += 4;
+                    continue;
+                }
+                
+                if (html.substr(i, 8).toLowerCase() === '<strong>') {
+                    if (!inBold) {
+                        // Open bold group AND explicitly force Calibri font
+                        rtf += `{\\b \\f0\\fs${rtfFontSize} `;
+                        inBold = true;
+                    }
+                    i += 8;
+                    continue;
+                }
+                
+                if (html.substr(i, 9).toLowerCase() === '</strong>') {
+                    if (inBold) {
+                        rtf += '}';
+                        // After closing bold, re-apply Calibri font explicitly
+                        rtf += ` \\f0\\fs${rtfFontSize}`;
+                        inBold = false;
+                    }
+                    i += 9;
+                    continue;
+                }
+                
+                // Skip HTML tags but preserve their content
+                if (html[i] === '<') {
+                    const tagStart = i;
+                    while (i < html.length && html[i] !== '>') {
+                        i++;
+                    }
+                    if (i < html.length) i++; // Skip the '>'
+                    continue;
+                }
+                
+                // Escape RTF special characters
+                const char = html[i];
+                if (char === '\\') {
+                    rtf += '\\\\';
+                } else if (char === '{') {
+                    rtf += '\\{';
+                } else if (char === '}') {
+                    rtf += '\\}';
+                } else if (char === '\n') {
+                    // Line break - use \par and explicitly re-apply Calibri font (font 0)
+                    rtf += `\\par\n\\f0\\fs${rtfFontSize} `;
+                } else if (char.charCodeAt(0) > 127) {
+                    // Unicode character - convert to RTF Unicode
+                    const code = char.charCodeAt(0);
+                    rtf += '\\u' + code + '?';
+                } else {
+                    rtf += char;
+                }
+                
+                i++;
+            }
+            
+            // Close any open bold tags
+            if (inBold) {
+                rtf += '}';
+                // Re-apply Calibri font (font 0) after closing bold
+                rtf += ` \\f0\\fs${rtfFontSize}`;
+            }
+            
+            rtf += '\n}';
+            
+            // Final verification - log RTF sample
+            const rtfSample = rtf.substring(0, Math.min(200, rtf.length));
+            console.log('RTF Sample (first 200 chars):', rtfSample);
+            console.log('RTF contains font:', rtf.includes('Calibri'), 'Contains bold:', rtf.includes('\\b'));
+            
+            return rtf;
+        }
+        
+        async function createOutlookEmail() {
+            console.log('✅ GRAPH API VERSION - Dec 24 2024 - Using Microsoft Graph API (NOT mailto)');
+            console.log('📧 Microsoft Graph API - Creating Outlook draft...');
+            
+            const textContent = contentEditor.textContent || contentEditor.innerText || '';
+            
+            if (!textContent.trim()) {
+                alert('No content to send. Please upload and process a note first.');
+                return;
+            }
+            
+            // Store original button HTML for reset in case of error
+            const originalHTML = outlookEmailBtn.innerHTML;
+            
+            try {
+                // Always prompt for email (works with all tracking prevention settings)
+                const userEmail = prompt('Enter your email address:', 'your.email@golconda.com');
+                if (!userEmail) {
+                    console.log('User cancelled email input');
+                    return;
+                }
+                
+                // Check authentication status
+                console.log('Checking authentication status...');
+                const authStatusResp = await fetch(`/api/auth/status?user_email=${encodeURIComponent(userEmail)}`);
+                const authStatus = await authStatusResp.json();
+                
+                if (!authStatus.authenticated) {
+                    console.log('User not authenticated, initiating OAuth flow...');
+                    
+                    // Get auth URL
+                    const loginResp = await fetch('/api/auth/login');
+                    const loginData = await loginResp.json();
+                    
+                    // Open auth window
+                    const authWindow = window.open(
+                        loginData.auth_url,
+                        'Microsoft Login',
+                        'width=600,height=800,scrollbars=yes'
+                    );
+                    
+                    alert('Please complete authentication in the popup window. Click OK after you\'ve logged in.');
+                    
+                    // After user completes auth, they need to try again
+                    alert('Authentication complete! Please click "Create Outlook Email" again.');
+                    return;
+                }
+                
+                // User is authenticated, proceed with draft creation
+                console.log('User authenticated, creating draft...');
+                
+                // Get HTML content and format it
+                let htmlContent = contentEditor.innerHTML || '';
+                const currentFont = 'Calibri';
+                const currentSize = '11';
+                
+                // Normalize HTML tags
+                htmlContent = htmlContent
+                    .replace(/<strong>/gi, '<b>')
+                    .replace(/<\/strong>/gi, '</b>')
+                    .replace(/<em>/gi, '<i>')
+                    .replace(/<\/em>/gi, '</i>');
+                
+                if (!htmlContent.trim()) {
+                    htmlContent = textContent.replace(/\n/g, '<br>');
+                }
+                
+                // Create styled HTML for email with Calibri 11pt
+                let styledHtml = htmlContent;
+                
+                // Add font styling to HTML elements
+                if (!styledHtml.includes('<p') && !styledHtml.includes('<div')) {
+                    // Plain text - wrap with paragraphs
+                    styledHtml = styledHtml
+                        .split('\n')
+                        .map(line => line.trim() ? `<p style="font-family: ${currentFont}; font-size: ${currentSize}pt; margin: 0;">${line}</p>` : '<br>')
+                        .join('');
+                } else {
+                    // Add font styles to existing elements
+                    styledHtml = styledHtml
+                        .replace(/<p(?!\s*style)([^>]*)>/gi, `<p style="font-family: ${currentFont}; font-size: ${currentSize}pt; margin: 0;"$1>`)
+                        .replace(/<div(?!\s*style)([^>]*)>/gi, `<div style="font-family: ${currentFont}; font-size: ${currentSize}pt;"$1>`)
+                        .replace(/<b>/gi, '<b style="font-weight: bold;">')
+                        .replace(/<strong>/gi, '<strong style="font-weight: bold;">');
+                }
+                
+                // Create complete HTML email body
+                const emailHtml = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: ${currentFont}, Arial, sans-serif; font-size: ${currentSize}pt; }
+        p { margin: 0; padding: 2px 0; }
+        b, strong { font-weight: bold; }
+    </style>
+</head>
+<body>
+${styledHtml}
+</body>
+</html>`;
+                
+                // Subject for the email
+                const subject = 'Processed Meeting Notes';
+                
+                // Show loading state
+                outlookEmailBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Creating Draft...';
+                outlookEmailBtn.disabled = true;
+                
+                // Create draft via backend API
+                const formData = new FormData();
+                formData.append('subject', subject);
+                formData.append('html_content', emailHtml);
+                formData.append('user_email', userEmail);
+                
+                console.log('Sending request to create draft...');
+                const response = await fetch('/api/create-draft', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    console.log('Draft created successfully:', result);
+                    
+                    // Show success message
+                    outlookEmailBtn.innerHTML = '<i class="fas fa-check mr-2"></i>Draft Created!';
+                    outlookEmailBtn.classList.remove('bg-green-600');
+                    outlookEmailBtn.classList.add('bg-green-500');
+                    
+                    // Open Outlook Web draft in new tab (most reliable)
+                    window.open(result.outlook_web_url, '_blank');
+                    console.log('Opened Outlook Web draft in new tab');
+                    
+                    // Show user-friendly message
+                    alert('Draft email created successfully! Opening in new tab...\n\nThe formatted note is now in your Outlook drafts folder.');
+                    
+                    // Reset button after delay
+                    setTimeout(() => {
+                        outlookEmailBtn.innerHTML = originalHTML;
+                        outlookEmailBtn.classList.remove('bg-green-500');
+                        outlookEmailBtn.classList.add('bg-green-600');
+                        outlookEmailBtn.disabled = false;
+                    }, 3000);
+                } else {
+                    throw new Error(result.message || 'Failed to create draft');
+                }
+                
+            } catch (error) {
+                console.error('Error creating Outlook draft:', error);
+                
+                // Reset button
+                outlookEmailBtn.innerHTML = originalHTML || '<i class="fas fa-envelope mr-2"></i>Create Outlook Email';
+                outlookEmailBtn.classList.remove('bg-green-500');
+                outlookEmailBtn.classList.add('bg-green-600');
+                outlookEmailBtn.disabled = false;
+                
+                alert('Failed to create Outlook draft. Please try again.\n\nError: ' + error.message);
+            }
+        }
+        
+        async function copyEditorContent() {
+            const textContent = contentEditor.textContent || contentEditor.innerText || '';
+            
+            if (!textContent.trim()) {
+                alert('No content to copy');
+                return;
+            }
+            
+            try {
+                // Get HTML content
+                let htmlContent = contentEditor.innerHTML || '';
+                htmlContent = htmlContent.replace(/<strong>/gi, '<b>').replace(/<\/strong>/gi, '</b>');
+                
+                // Get current font and size from editor
+                const computedStyle = window.getComputedStyle(contentEditor);
+                const currentFont = computedStyle.fontFamily.split(',')[0].replace(/['"]/g, '').trim();
+                const currentSize = computedStyle.fontSize.replace('px', '');
+                
+                // Convert HTML to RTF format with actual font and size (Outlook's native format)
+                const rtfContent = htmlToRtf(htmlContent, currentFont, currentSize);
+                
+                // Method: Use clipboard event listener to inject RTF data
+                // This is the most reliable way to copy RTF format
+                let copySuccess = false;
+                
+                const copyHandler = function(e) {
+                    // Clear existing clipboard data
+                    e.clipboardData.clearData();
+                    
+                    // Set RTF format (Outlook's preferred format)
+                    e.clipboardData.setData('text/rtf', rtfContent);
+                    
+                    // Also set HTML and plain text as fallbacks
+                    e.clipboardData.setData('text/html', htmlContent);
+                    e.clipboardData.setData('text/plain', textContent);
+                    
+                    e.preventDefault();
+                    copySuccess = true;
+                };
+                
+                // Add event listener
+                document.addEventListener('copy', copyHandler);
+                
+                // Select content and trigger copy
+                contentEditor.focus();
+                const range = document.createRange();
+                range.selectNodeContents(contentEditor);
+                const selection = window.getSelection();
+                selection.removeAllRanges();
+                selection.addRange(range);
+                
+                // Trigger copy
+                const success = document.execCommand('copy');
+                
+                // Remove event listener
+                document.removeEventListener('copy', copyHandler);
+                
+                // Clear selection
+                selection.removeAllRanges();
+                
+                if (success && copySuccess) {
+                    // Visual feedback
+                    const originalHTML = copyBtn.innerHTML;
+                    copyBtn.innerHTML = '<i class="fas fa-check mr-2"></i>Copied!';
+                    copyBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                    copyBtn.classList.add('bg-green-600', 'hover:bg-green-700');
+                    
+                    setTimeout(() => {
+                        copyBtn.innerHTML = originalHTML;
+                        copyBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
+                        copyBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                    }, 2000);
+                    return;
+                }
+                
+                throw new Error('Copy event not triggered');
+            } catch (error) {
+                console.error('Copy failed:', error);
+                
+                // Fallback: Try Clipboard API with HTML
+                try {
+                    if (navigator.clipboard && navigator.clipboard.write) {
+                        const htmlBlob = new Blob([htmlContent], { type: 'text/html' });
+                        const textBlob = new Blob([textContent], { type: 'text/plain' });
+                        
+                        const clipboardItem = new ClipboardItem({
+                            'text/html': htmlBlob,
+                            'text/plain': textBlob
+                        });
+                        
+                        await navigator.clipboard.write([clipboardItem]);
+                        
+                        // Visual feedback
+                        const originalHTML = copyBtn.innerHTML;
+                        copyBtn.innerHTML = '<i class="fas fa-check mr-2"></i>Copied!';
+                        copyBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                        copyBtn.classList.add('bg-green-600', 'hover:bg-green-700');
+                        
+                        setTimeout(() => {
+                            copyBtn.innerHTML = originalHTML;
+                            copyBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
+                            copyBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                        }, 2000);
+                        return;
+                    }
+                } catch (fallbackError) {
+                    console.error('Fallback also failed:', fallbackError);
+                }
+                
+                alert('Copy failed. Please try again.');
+            }
+        }
+        
+        function updateWordCount() {
+            const text = contentEditor.textContent || contentEditor.innerText || '';
+            const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+            wordCount.textContent = `${words} words`;
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileUpload(files[0]);
+            }
+        }
+
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                handleFileUpload(file);
+            }
+        }
+
+        async function handleFileUpload(file) {
+            if (file.type !== 'application/pdf') {
+                alert('Please select a PDF file. Only PDF files are supported.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            uploadProgress.classList.remove('hidden');
+            progressBar.style.width = '0%';
+            progressPercent.textContent = '0%';
+            progressText.textContent = 'Uploading...';
+
+            try {
+                // Smooth progress tracking
+                let progress = 0;
+                let uploadComplete = false;
+                let processingComplete = false;
+                
+                // Continuous progress animation
+                const progressInterval = setInterval(() => {
+                    if (!uploadComplete) {
+                        // Upload phase (0-30%)
+                        progress += 0.5;
+                        if (progress > 30) progress = 30;
+                    } else if (!processingComplete) {
+                        // Processing phase (30-95%)
+                        progress += 0.8;
+                        if (progress > 95) progress = 95;
+                    } else {
+                        // Completion (95-100%)
+                        progress += 1;
+                        if (progress >= 100) {
+                            progress = 100;
+                            clearInterval(progressInterval);
+                        }
+                    }
+                    
+                    progressBar.style.width = progress + '%';
+                    progressPercent.textContent = Math.round(progress) + '%';
+                }, 100);
+
+                // Upload the file
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    clearInterval(progressInterval);
+                    const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+                    throw new Error(errorData.detail || errorData.message || `Upload failed: ${response.status} ${response.statusText}`);
+                }
+
+                uploadComplete = true;
+                progressText.textContent = 'Processing with GPT-4o Vision...';
+                
+                const result = await response.json();
+                currentNoteId = result.note_id;
+                
+                // Wait a moment for database to commit (fixes first upload issue)
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // Fetch the note to get content and file path with retry logic
+                let note = null;
+                let retries = 3;
+                while (retries > 0 && !note) {
+                    try {
+                        const noteResponse = await fetch(`/api/notes/${result.note_id}`);
+                        if (noteResponse.ok) {
+                            note = await noteResponse.json();
+                            break;
+                        } else if (noteResponse.status === 404) {
+                            // Note not found yet, wait and retry
+                            await new Promise(resolve => setTimeout(resolve, 1000));
+                            retries--;
+                        } else {
+                            throw new Error(`Failed to fetch note: ${noteResponse.status}`);
+                        }
+                    } catch (error) {
+                        console.error(`Error fetching note (${retries} retries left):`, error);
+                        if (retries > 1) {
+                            await new Promise(resolve => setTimeout(resolve, 1000));
+                        }
+                        retries--;
+                    }
+                }
+                
+                if (!note) {
+                    throw new Error('Failed to retrieve processed note. Please try uploading again.');
+                }
+
+                processingComplete = true;
+                
+                // Wait a moment for progress to reach 100%
+                setTimeout(() => {
+                    clearInterval(progressInterval);
+                    progressBar.style.width = '100%';
+                    progressPercent.textContent = '100%';
+                    progressText.textContent = 'Processing complete!';
+                    
+                    // Show PDF and text
+                    setTimeout(() => {
+                        uploadProgress.classList.add('hidden');
+                        displayNote(note);
+                    }, 500);
+                }, 300);
+
+            } catch (error) {
+                console.error('Upload error:', error);
+                const errorMessage = error.message || 'Upload failed. Please try again.';
+                alert(errorMessage);
+                uploadProgress.classList.add('hidden');
+            }
+        }
+
+        function displayNote(note) {
+            // Hide upload area, show PDF viewer
+            uploadArea.style.display = 'none';
+            pdfViewerContainer.classList.remove('hidden');
+            
+            // Load PDF in iframe for inline display
+            if (note.file_path) {
+                const pdfUrl = `/api/files/${note.id}`;
+                pdfViewer.src = pdfUrl;
+                pdfViewer.setAttribute('type', 'application/pdf');
+            }
+            
+            // Load content in editor - convert markdown to HTML
+            let content = note.content || '';
+            
+            // Configure marked.js options
+            marked.setOptions({
+                breaks: true,  // Convert line breaks to <br>
+                gfm: true      // GitHub flavored markdown
+            });
+            
+            // Convert markdown to HTML using marked.js
+            const htmlContent = marked.parse(content);
+            
+            // Ensure the editor uses Calibri 11pt by default
+            contentEditor.style.fontFamily = 'Calibri';
+            contentEditor.style.fontSize = '11pt';
+            
+            contentEditor.innerHTML = htmlContent;
+            currentNoteContent = note.content || '';
+            isDirty = false;
+            
+            // Show toolbar and action buttons
+            toolbarContainer.classList.remove('hidden');
+            copyBtn.classList.remove('hidden');
+            outlookEmailBtn.classList.remove('hidden');
+            
+            // Update word count
+            updateWordCount();
+        }
+
+        function resetView() {
+            // Reset to initial state
+            uploadArea.style.display = 'flex';
+            pdfViewerContainer.classList.add('hidden');
+            pdfViewer.src = '';
+            contentEditor.innerHTML = '';
+            toolbarContainer.classList.add('hidden');
+            copyBtn.classList.add('hidden');
+            outlookEmailBtn.classList.add('hidden');
+            currentNoteId = null;
+            currentNoteContent = '';
+            updateWordCount();
+        }
+
+
+        async function showStatistics() {
+            try {
+                const response = await fetch('/api/statistics');
+                const stats = await response.json();
+
+                statsContent.innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-blue-800 mb-2">Total Notes</h4>
+                            <p class="text-3xl font-bold text-blue-600">${stats.total_notes || 0}</p>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-green-800 mb-2">Processed Notes</h4>
+                            <p class="text-3xl font-bold text-green-600">${stats.processed_notes || 0}</p>
+                        </div>
+                        <div class="bg-purple-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-purple-800 mb-2">Average Confidence</h4>
+                            <p class="text-3xl font-bold text-purple-600">${(stats.average_confidence || 0).toFixed(1)}%</p>
+                        </div>
+                        <div class="bg-orange-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-orange-800 mb-2">Total Words</h4>
+                            <p class="text-3xl font-bold text-orange-600">${stats.total_words || 0}</p>
+                        </div>
+                    </div>
+                    <div class="mt-6">
+                        <h4 class="font-semibold text-gray-800 mb-3">Category Distribution</h4>
+                        <div class="space-y-2">
+                            ${Object.entries(stats.category_distribution || {}).map(([category, count]) => `
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-gray-600">${category}</span>
+                                    <span class="text-sm font-semibold text-gray-800">${count}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+
+                statsModal.classList.remove('hidden');
+            } catch (error) {
+                console.error('Error loading statistics:', error);
+                alert('Failed to load statistics');
+            }
+        }
+    </script>
+</body>
+</html>
+
+
