@@ -23,6 +23,9 @@ COPY . .
 # Create necessary directories (static already exists from COPY)
 RUN mkdir -p uploads processed
 
+# Make entrypoint script executable
+RUN chmod +x entrypoint.sh
+
 # Expose port
 EXPOSE 8000
 
@@ -32,6 +35,6 @@ ENV PORT=8000
 ENV DEBUG=False
 
 # Run the application
-# Use shell form to allow $PORT variable expansion (Railway dynamic port)
-CMD uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}
+# Use entrypoint script for proper PORT handling across all cloud platforms
+CMD ["./entrypoint.sh"]
 
