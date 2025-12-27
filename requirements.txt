@@ -11,6 +11,7 @@ PyPDF2>=3.0.0
 
 # AI - OpenAI API only (no local models)
 openai>=1.0.0
+sentence-transformers>=2.2.0
 
 # Database
 sqlalchemy>=2.0.0
