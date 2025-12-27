@@ -1,11 +1,16 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -e
 
-# Get PORT from environment or default to 8000
-PORT=${PORT:-8000}
+# Railway PORT handling - explicit variable expansion
+if [ -z "$PORT" ]; then
+    export PORT=8000
+    echo "⚠️  PORT not set, using default: 8000"
+else
+    echo "✅ PORT detected: $PORT"
+fi
 
-echo "🚀 Starting application on port $PORT..."
+echo "🚀 Starting uvicorn on 0.0.0.0:$PORT..."
 
-# Start uvicorn with the configured port
+# Start uvicorn with explicit port
 exec uvicorn main:app --host 0.0.0.0 --port "$PORT"
 

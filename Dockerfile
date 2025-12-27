@@ -35,6 +35,6 @@ ENV PORT=8000
 ENV DEBUG=False
 
 # Run the application
-# Use entrypoint script for proper PORT handling across all cloud platforms
-CMD ["./entrypoint.sh"]
+# Use ENTRYPOINT for explicit execution (overrides any cached Railway config)
+ENTRYPOINT ["/bin/bash", "/app/entrypoint.sh"]
 
