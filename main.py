@@ -3,6 +3,7 @@ Handwritten Notes Processing Agents - Main Application
 """
 
 import os
+import logging
 import uvicorn
 from fastapi import FastAPI, File, UploadFile, HTTPException, Depends
 from fastapi.staticfiles import StaticFiles
@@ -20,6 +21,13 @@ from services.storage_service import StorageService
 
 # Load environment variables
 load_dotenv()
+
+# Configure logging to output to stdout
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(levelname)s:     %(name)s - %(message)s',
+    handlers=[logging.StreamHandler()]
+)
 
 # Create FastAPI app
 app = FastAPI(
