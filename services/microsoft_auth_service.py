@@ -22,7 +22,12 @@ class MicrosoftAuthService:
         self.tenant_id = os.getenv("MICROSOFT_TENANT_ID", "common")
         self.redirect_uri = os.getenv("MICROSOFT_REDIRECT_URI")
         self.authority = f"https://login.microsoftonline.com/{self.tenant_id}"
-        self.scopes = ["https://graph.microsoft.com/Mail.ReadWrite"]
+        self.scopes = [
+            "https://graph.microsoft.com/Mail.ReadWrite",
+            "offline_access",
+            "openid",
+            "profile"
+        ]
         
         if not self.client_id or not self.client_secret:
             logger.warning("Microsoft Graph API credentials not configured")
