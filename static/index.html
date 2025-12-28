@@ -532,6 +532,9 @@
                     const loginResp = await fetch('/api/auth/login');
                     const loginData = await loginResp.json();
                     
+                    console.log('🔵 AUTH URL:', loginData.auth_url);
+                    console.log('🔵 Opening popup window...');
+                    
                     // Open auth window
                     const authWindow = window.open(
                         loginData.auth_url,
@@ -539,7 +542,11 @@
                         'width=600,height=800,scrollbars=yes'
                     );
                     
+                    console.log('🔵 Popup window opened:', !!authWindow);
+                    
                     alert('Please complete authentication in the popup window. Click OK after you\'ve logged in.');
+                    
+                    console.log('🔵 User clicked OK on first alert - assuming auth complete');
                     
                     // After user completes auth, they need to try again
                     alert('Authentication complete! Please click "Create Outlook Email" again.');

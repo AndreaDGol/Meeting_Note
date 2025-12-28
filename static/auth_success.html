@@ -49,8 +49,14 @@
         <p class="close-message">You can close this window and return to the application.</p>
     </div>
     <script>
+        // DIAGNOSTIC LOGGING
+        console.log('🔵 auth_success.html loaded!');
+        console.log('🔵 Current URL:', window.location.href);
+        console.log('🔵 Opener exists:', !!window.opener);
+        
         // Automatically close the popup window after 2 seconds
         setTimeout(() => {
+            console.log('🔵 Closing popup window...');
             window.close();
         }, 2000);
     </script>
