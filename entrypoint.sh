@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-# Railway deployment trigger - Dec 27 2025
+# Railway deployment trigger - Dec 27 2025 - 9:55 PM - Force redeploy with emoji logs
 # Railway PORT handling - explicit variable expansion
 if [ -z "$PORT" ]; then
     export PORT=8000
