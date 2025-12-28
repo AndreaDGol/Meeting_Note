@@ -651,13 +651,16 @@ ${styledHtml}
                     outlookEmailBtn.classList.remove('bg-green-600');
                     outlookEmailBtn.classList.add('bg-green-500');
                     
-                    console.log('Navigating to Outlook Web draft:', result.outlook_web_url);
+                    // Show success message - no redirect, draft will appear in Outlook desktop
+                    alert('✅ Draft email created successfully!\n\nThe formatted note is now in your Outlook Drafts folder.\n\n📧 Switch to your Outlook desktop to view the draft.');
                     
-                    // Show brief success message, then automatically navigate to draft
-                    alert('✅ Draft email created successfully!\n\nOpening your Outlook draft now...');
-                    
-                    // Navigate to the draft (more reliable than window.open)
-                    window.location.href = result.outlook_web_url;
+                    // Reset button after delay
+                    setTimeout(() => {
+                        outlookEmailBtn.innerHTML = originalHTML;
+                        outlookEmailBtn.classList.remove('bg-green-500');
+                        outlookEmailBtn.classList.add('bg-green-600');
+                        outlookEmailBtn.disabled = false;
+                    }, 3000);
                 } else {
                     throw new Error(result.message || 'Failed to create draft');
                 }
