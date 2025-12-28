@@ -373,8 +373,9 @@ async def microsoft_auth_callback(
                     logger.info(f"🔵 Saving tokens to database for {user_email}...")
                     auth_service._save_tokens(user_email, token_response)
                     logger.info(f"✅ Successfully authenticated user: {user_email}")
-                    # Redirect to a success page or close the popup
-                    return RedirectResponse(url="/static/auth_success.html")
+                    
+                    # Redirect back to the app with success flag
+                    return RedirectResponse(url="/email?auth=success")
                 else:
                     logger.error("🔴 User email not found in token claims.")
                     raise ValueError("User email not found in token claims.")

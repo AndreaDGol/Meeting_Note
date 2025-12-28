@@ -498,6 +498,29 @@
             return rtf;
         }
         
+        // Check for post-authentication redirect on page load
+        (function checkPostAuth() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const authSuccess = urlParams.get('auth');
+            
+            if (authSuccess === 'success') {
+                // Remove query parameter from URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+                
+                // Restore note if it was saved before auth
+                const savedNoteId = localStorage.getItem('pendingAuthNoteId');
+                if (savedNoteId) {
+                    loadNote(parseInt(savedNoteId));
+                    localStorage.removeItem('pendingAuthNoteId');
+                }
+                
+                // Show success message
+                setTimeout(() => {
+                    alert('✅ Authentication successful!\n\nYou can now click "Create Outlook Email" to create your draft.');
+                }, 500);
+            }
+        })();
+        
         async function createOutlookEmail() {
             console.log('✅ GRAPH API VERSION - Dec 24 2024 - Using Microsoft Graph API (NOT mailto)');
             console.log('📧 Microsoft Graph API - Creating Outlook draft...');
@@ -526,30 +549,22 @@
                 const authStatus = await authStatusResp.json();
                 
                 if (!authStatus.authenticated) {
-                    console.log('User not authenticated, initiating OAuth flow...');
+                    console.log('User not authenticated, redirecting to Microsoft login...');
+                    
+                    // Save user email and current note ID to localStorage for after redirect
+                    localStorage.setItem('pendingAuthEmail', userEmail);
+                    if (currentNoteId) {
+                        localStorage.setItem('pendingAuthNoteId', currentNoteId.toString());
+                    }
                     
                     // Get auth URL
                     const loginResp = await fetch('/api/auth/login');
                     const loginData = await loginResp.json();
                     
-                    console.log('🔵 AUTH URL:', loginData.auth_url);
-                    console.log('🔵 Opening popup window...');
+                    console.log('🔵 Redirecting to Microsoft login (full page)...');
                     
-                    // Open auth window
-                    const authWindow = window.open(
-                        loginData.auth_url,
-                        'Microsoft Login',
-                        'width=600,height=800,scrollbars=yes'
-                    );
-                    
-                    console.log('🔵 Popup window opened:', !!authWindow);
-                    
-                    alert('Please complete authentication in the popup window. Click OK after you\'ve logged in.');
-                    
-                    console.log('🔵 User clicked OK on first alert - assuming auth complete');
-                    
-                    // After user completes auth, they need to try again
-                    alert('Authentication complete! Please click "Create Outlook Email" again.');
+                    // Redirect entire page to Microsoft login
+                    window.location.href = loginData.auth_url;
                     return;
                 }
                 
