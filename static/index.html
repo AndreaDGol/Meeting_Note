@@ -529,7 +529,10 @@
         function processAnotherNote() {
             console.log('🔄 Processing another note - resetting state...');
             
-            // Clear editor content
+            // Clear PDF viewer (left side)
+            pdfViewer.src = '';
+            
+            // Clear editor content (right side)
             contentEditor.innerHTML = '<p class="text-gray-400">Your transcribed text will appear here... Upload a handwritten note to get started.</p>';
             
             // Reset current note ID
@@ -551,10 +554,10 @@
             // Reset word count
             wordCountDisplay.textContent = '0 words';
             
-            // Show upload area prominently
-            fileInput.value = ''; // Clear file input
+            // Clear file input
+            fileInput.value = '';
             
-            console.log('✅ Ready for next note upload!');
+            console.log('✅ Both editors cleared - ready for next note upload!');
         }
         
         // Add click handler for Process Another button
