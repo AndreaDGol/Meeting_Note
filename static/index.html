@@ -529,6 +529,10 @@
         function processAnotherNote() {
             console.log('🔄 Processing another note - resetting state...');
             
+            // Show upload area, hide PDF viewer
+            uploadArea.style.display = 'flex';
+            pdfViewerContainer.classList.add('hidden');
+            
             // Clear PDF viewer (left side)
             pdfViewer.src = '';
             
@@ -557,7 +561,7 @@
             // Clear file input
             fileInput.value = '';
             
-            console.log('✅ Both editors cleared - ready for next note upload!');
+            console.log('✅ Both editors cleared - drag & drop ready for next note!');
         }
         
         // Add click handler for Process Another button
