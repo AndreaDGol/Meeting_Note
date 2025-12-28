@@ -346,13 +346,19 @@ async def microsoft_auth_callback(
     auth_service: MicrosoftAuthService = Depends(get_microsoft_auth_service)
 ):
     """Handles the callback from Microsoft after user authentication."""
+    logger.info("🔵 /api/auth/callback CALLED!")
+    logger.info(f"🔵 Query params - code: {code[:20] if code else None}..., error: {error}")
+    
     if error:
-        logger.error(f"Microsoft auth error: {error} - {error_description}")
+        logger.error(f"🔴 Microsoft auth error: {error} - {error_description}")
         return JSONResponse(status_code=400, content={"message": f"Authentication failed: {error_description}"})
 
     if code:
         try:
+            logger.info("🔵 Acquiring token by auth code...")
             token_response = auth_service.acquire_token_by_auth_code(code)
+            logger.info(f"🔵 Token response has access_token: {'access_token' in token_response}")
+            
             if "access_token" in token_response:
                 # Get email from ID token claims (no Graph API call needed!)
                 user_email = token_response["id_token_claims"].get("preferred_username")
@@ -361,18 +367,26 @@ async def microsoft_auth_callback(
                 if not user_email:
                     user_email = token_response["id_token_claims"].get("email")
                 
+                logger.info(f"🔵 Extracted user email: {user_email}")
+                
                 if user_email:
+                    logger.info(f"🔵 Saving tokens to database for {user_email}...")
                     auth_service._save_tokens(user_email, token_response)
-                    logger.info(f"Successfully authenticated user: {user_email}")
+                    logger.info(f"✅ Successfully authenticated user: {user_email}")
                     # Redirect to a success page or close the popup
                     return RedirectResponse(url="/static/auth_success.html")
                 else:
+                    logger.error("🔴 User email not found in token claims.")
                     raise ValueError("User email not found in token claims.")
             else:
-                raise ValueError(f"Failed to acquire token: {token_response.get('error_description')}")
+                error_msg = token_response.get('error_description', 'Unknown error')
+                logger.error(f"🔴 Failed to acquire token: {error_msg}")
+                raise ValueError(f"Failed to acquire token: {error_msg}")
         except Exception as e:
-            logger.error(f"Error during token acquisition: {str(e)}")
+            logger.error(f"🔴 Error during token acquisition: {str(e)}")
             return JSONResponse(status_code=500, content={"message": f"Authentication failed: {str(e)}"})
+    
+    logger.error("🔴 No authorization code received in callback")
     return JSONResponse(status_code=400, content={"message": "No authorization code received."})
 
 @router.get("/auth/status")
@@ -381,11 +395,21 @@ async def microsoft_auth_status(
     auth_service: MicrosoftAuthService = Depends(get_microsoft_auth_service)
 ):
     """Checks if a user is authenticated and their token is valid."""
+    logger.info(f"🟡 /api/auth/status called for email: {user_email}")
+    
     user_auth = auth_service.get_user_auth(user_email)
+    logger.info(f"🟡 Database lookup result: {user_auth is not None}")
+    
     if user_auth:
+        logger.info(f"🟡 Found user_auth, attempting silent token acquisition...")
         token_result = auth_service.acquire_token_silent(user_email)
+        logger.info(f"🟡 Token result has access_token: {token_result and 'access_token' in token_result}")
+        
         if token_result and "access_token" in token_result:
+            logger.info(f"✅ User {user_email} is authenticated")
             return {"authenticated": True, "user_email": user_email}
+    
+    logger.info(f"🔴 User {user_email} is NOT authenticated")
     return {"authenticated": False, "user_email": user_email}
 
 @router.post("/create-draft")

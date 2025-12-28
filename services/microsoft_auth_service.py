@@ -206,9 +206,19 @@ class MicrosoftAuthService:
     
     def get_user_auth(self, user_email: str):
         """Get user authentication record from database"""
+        logger.info(f"🟡 get_user_auth called for {user_email}")
+        
         if not self.db:
+            logger.error("🔴 Database session not available!")
             raise Exception("Database session not available")
-        return self.db.query(UserAuth).filter(UserAuth.user_email == user_email).first()
+        
+        user_auth = self.db.query(UserAuth).filter(UserAuth.user_email == user_email).first()
+        logger.info(f"🟡 Query result: {'Found' if user_auth else 'Not found'}")
+        
+        if user_auth:
+            logger.info(f"🟡 User auth ID: {user_auth.id}, Token expires at: {user_auth.token_expires_at}")
+        
+        return user_auth
     
     def acquire_token_silent(self, user_email: str):
         """Get valid token, refreshing if needed"""
@@ -222,9 +232,20 @@ class MicrosoftAuthService:
     
     def _save_tokens(self, user_email: str, token_response: Dict[str, Any]):
         """Save tokens to database (uses self.db)"""
+        logger.info(f"🟢 _save_tokens called for {user_email}")
+        
         if not self.db:
+            logger.error("🔴 Database session not available!")
             raise Exception("Database session not available")
-        self.save_tokens(self.db, user_email, token_response)
+        
+        try:
+            logger.info(f"🟢 Calling save_tokens with db session...")
+            result = self.save_tokens(self.db, user_email, token_response)
+            logger.info(f"✅ Tokens saved successfully for {user_email}, ID: {result.id}")
+            return result
+        except Exception as e:
+            logger.error(f"🔴 Error saving tokens: {str(e)}")
+            raise
     
     def get_user_info_from_token(self, access_token: str) -> Dict[str, Any]:
         """
