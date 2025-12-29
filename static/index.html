@@ -586,11 +586,11 @@
             // Remove .pdf extension
             let topic = filename.replace(/\.pdf$/i, '');
             
-            // Extract part before " - " (hyphen) or before "Zoom meeting"
-            // Example: "Centura Wealth - Zoom meeting notes (9-11-24, 11-53 AM)" -> "Centura Wealth"
-            const match = topic.match(/^([^-]+?)(?:\s*-\s*(?:Zoom|zoom|Meeting|meeting)|$)/);
-            if (match && match[1]) {
-                topic = match[1].trim();
+            // Extract ONLY the part before the FIRST hyphen
+            // Example: "Bain Capital - Equity Opportunity Fund - Zoom..." -> "Bain Capital"
+            const firstHyphenIndex = topic.indexOf(' - ');
+            if (firstHyphenIndex > 0) {
+                topic = topic.substring(0, firstHyphenIndex).trim();
             }
             
             return topic || 'Meeting';
@@ -668,6 +668,13 @@
                 let htmlContent = contentEditor.innerHTML || '';
                 const currentFont = 'Calibri';
                 const currentSize = '11';
+                
+                // Remove AI-generated title (first heading like "Bain Meeting Summary")
+                // Strip first <h1>, <h2>, <h3>, or large bold text at the beginning
+                htmlContent = htmlContent
+                    .replace(/^<h[1-6][^>]*>.*?<\/h[1-6]>/i, '')              // Remove first heading tag
+                    .replace(/^<p[^>]*><b[^>]*>.*?Summary.*?<\/b><\/p>/i, '') // Remove "...Summary" bold paragraph
+                    .replace(/^<p[^>]*><strong[^>]*>.*?Summary.*?<\/strong><\/p>/i, ''); // Remove strong variant
                 
                 // Normalize HTML tags
                 htmlContent = htmlContent
@@ -1074,9 +1081,16 @@ ${styledHtml}
             // Convert markdown to HTML using marked.js
             let htmlContent = marked.parse(content);
             
-            // Strip empty paragraphs and extra spacing
-            // Remove <p><br></p>, <p></p>, <p> </p> (empty or whitespace-only paragraphs)
-            htmlContent = htmlContent.replace(/<p>\s*(<br\s*\/?>)?\s*<\/p>/gi, '');
+            // Strip empty paragraphs and extra spacing (more aggressive)
+            // Remove various forms of empty paragraphs
+            htmlContent = htmlContent
+                .replace(/<p>\s*<\/p>/gi, '')                    // <p></p>
+                .replace(/<p>\s*<br\s*\/?>\s*<\/p>/gi, '')       // <p><br></p>
+                .replace(/<p>\s*&nbsp;\s*<\/p>/gi, '')           // <p>&nbsp;</p>
+                .replace(/<p[^>]*>\s*<\/p>/gi, '')               // <p...></p> with any attributes
+                .replace(/(<br\s*\/?>\s*){2,}/gi, '<br>')        // Multiple <br> tags
+                .replace(/^\s*<br\s*\/?>/gi, '')                 // Leading <br>
+                .replace(/<br\s*\/?>\s*$/gi, '');                // Trailing <br>
             
             // Ensure the editor uses Calibri 11pt by default
             contentEditor.style.fontFamily = 'Calibri';
