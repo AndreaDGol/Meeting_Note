@@ -288,6 +288,27 @@
         </div>
     </div>
 
+    <!-- Custom Email Input Modal -->
+    <div id="emailInputModal" class="hidden fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-8 transform transition-all">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4 text-center">Enter Your Email Address</h3>
+            <input 
+                type="email" 
+                id="emailInputField" 
+                class="w-full px-4 py-3 text-base border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 mb-6" 
+                placeholder="your.email@golconda.com"
+            />
+            <div class="flex space-x-3">
+                <button id="emailCancelBtn" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white px-4 py-3 rounded-lg transition text-base font-medium">
+                    Cancel
+                </button>
+                <button id="emailContinueBtn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg transition text-base font-medium">
+                    Continue
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Global variables
         let currentNoteId = null;
@@ -319,6 +340,10 @@
         const statsContent = document.getElementById('statsContent');
         const bigAlertModal = document.getElementById('bigAlertModal');
         const bigAlertMessage = document.getElementById('bigAlertMessage');
+        const emailInputModal = document.getElementById('emailInputModal');
+        const emailInputField = document.getElementById('emailInputField');
+        const emailCancelBtn = document.getElementById('emailCancelBtn');
+        const emailContinueBtn = document.getElementById('emailContinueBtn');
 
         // Custom big alert function (replaces browser alert)
         function showBigAlert(message, autoDismiss = true) {
@@ -336,6 +361,52 @@
             bigAlertModal.onclick = () => {
                 bigAlertModal.classList.add('hidden');
             };
+        }
+
+        // Custom email input function (replaces browser prompt)
+        function showEmailInput(defaultValue = 'your.email@golconda.com') {
+            return new Promise((resolve) => {
+                emailInputField.value = defaultValue;
+                emailInputModal.classList.remove('hidden');
+                emailInputField.focus();
+                emailInputField.select();
+                
+                // Handle Continue button
+                const handleContinue = () => {
+                    const email = emailInputField.value.trim();
+                    emailInputModal.classList.add('hidden');
+                    cleanup();
+                    resolve(email || null);
+                };
+                
+                // Handle Cancel button
+                const handleCancel = () => {
+                    emailInputModal.classList.add('hidden');
+                    cleanup();
+                    resolve(null);
+                };
+                
+                // Handle Enter key
+                const handleKeyPress = (e) => {
+                    if (e.key === 'Enter') {
+                        handleContinue();
+                    } else if (e.key === 'Escape') {
+                        handleCancel();
+                    }
+                };
+                
+                // Cleanup function to remove event listeners
+                const cleanup = () => {
+                    emailContinueBtn.removeEventListener('click', handleContinue);
+                    emailCancelBtn.removeEventListener('click', handleCancel);
+                    emailInputField.removeEventListener('keypress', handleKeyPress);
+                };
+                
+                // Attach event listeners
+                emailContinueBtn.addEventListener('click', handleContinue);
+                emailCancelBtn.addEventListener('click', handleCancel);
+                emailInputField.addEventListener('keypress', handleKeyPress);
+            });
         }
 
         // Initialize app
@@ -692,8 +763,8 @@
             const originalHTML = outlookEmailBtn.innerHTML;
             
             try {
-                // Always prompt for email (works with all tracking prevention settings)
-                const userEmail = prompt('Enter your email address:', 'your.email@golconda.com');
+                // Always prompt for email using custom modal (bigger text, better UX)
+                const userEmail = await showEmailInput('your.email@golconda.com');
                 if (!userEmail) {
                     console.log('User cancelled email input');
                     return;
