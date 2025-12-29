@@ -1073,9 +1073,9 @@ ${styledHtml}
             // Load content in editor - convert markdown to HTML
             let content = note.content || '';
             
-            // FIRST: Clean the raw markdown to remove excessive newlines
-            // Replace 3+ consecutive newlines with just 2 (preserves paragraph breaks without extra spacing)
-            content = content.replace(/\n{3,}/g, '\n\n');
+            // FIRST: Clean the raw markdown to remove ALL extra newlines
+            // Replace 2+ consecutive newlines with just 1 (tight spacing, no blank lines)
+            content = content.replace(/\n{2,}/g, '\n');
             
             // Configure marked.js options
             marked.setOptions({
