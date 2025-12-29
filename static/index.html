@@ -17,10 +17,24 @@
             transform: translateY(-2px);
             box-shadow: 0 10px 25px rgba(0,0,0,0.1);
         }
-        /* Tighter spacing in editor to match Outlook draft */
+        /* Tighter spacing in editor - remove all visual gaps */
         #contentEditor p {
-            margin: 0;
-            padding: 2px 0;
+            margin: 0 !important;
+            padding: 0 !important;
+            line-height: 1.4 !important;
+        }
+        #contentEditor br {
+            display: none !important; /* Hide <br> tags that create blank lines */
+        }
+        #contentEditor ul,
+        #contentEditor ol {
+            margin: 0 !important;
+            padding-left: 20px !important;
+        }
+        #contentEditor li {
+            margin: 0 !important;
+            padding: 0 !important;
+            line-height: 1.4 !important;
         }
         #contentEditor b,
         #contentEditor strong {
