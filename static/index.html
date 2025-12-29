@@ -1138,31 +1138,26 @@ ${styledHtml}
             // Load content in editor - convert markdown to HTML
             let content = note.content || '';
             
-            // Configure marked.js options
-            marked.setOptions({
-                breaks: true,  // Convert line breaks to <br>
-                gfm: true      // GitHub flavored markdown
-            });
+            // Custom markdown converter (bypasses marked.js to avoid <p> tag spacing)
+            function convertMarkdownToHTML(markdown) {
+                // First, handle bold text **text** or __text__
+                let html = markdown.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                html = html.replace(/__(.*?)__/g, '<strong>$1</strong>');
+                
+                // Handle headers (lines ending with :)
+                html = html.replace(/^(.+):$/gm, '<strong>$1:</strong>');
+                
+                // Convert single line breaks to <br>
+                html = html.replace(/\n/g, '<br>');
+                
+                // Remove double <br> (empty lines)
+                html = html.replace(/<br>\s*<br>/g, '<br>');
+                
+                return html;
+            }
             
-            // Convert markdown to HTML using marked.js
-            let htmlContent = marked.parse(content);
-            
-            // FOR WEB UI ONLY: Remove extra spacing by collapsing multiple <br> tags
-            // This tightens display without affecting the source content (email draft uses original)
-            htmlContent = htmlContent
-                .replace(/(<br\s*\/?>){2,}/gi, '<br>')           // Multiple <br> → single <br>
-                .replace(/<\/p>\s*<p>/gi, '</p><p>');            // Remove space between paragraphs
-            
-            // THEN: Strip any remaining empty paragraphs from HTML
-            // Remove various forms of empty paragraphs
-            htmlContent = htmlContent
-                .replace(/<p>\s*<\/p>/gi, '')                    // <p></p>
-                .replace(/<p>\s*<br\s*\/?>\s*<\/p>/gi, '')       // <p><br></p>
-                .replace(/<p>\s*&nbsp;\s*<\/p>/gi, '')           // <p>&nbsp;</p>
-                .replace(/<p[^>]*>\s*<\/p>/gi, '')               // <p...></p> with any attributes
-                .replace(/(<br\s*\/?>\s*){2,}/gi, '<br>')        // Multiple <br> tags
-                .replace(/^\s*<br\s*\/?>/gi, '')                 // Leading <br>
-                .replace(/<br\s*\/?>\s*$/gi, '');                // Trailing <br>
+            // Use custom converter for web UI display (tight spacing)
+            let htmlContent = convertMarkdownToHTML(content);
             
             // Ensure the editor uses Calibri 11pt by default
             contentEditor.style.fontFamily = 'Calibri';
