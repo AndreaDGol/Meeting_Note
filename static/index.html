@@ -1026,7 +1026,11 @@ ${styledHtml}
             });
             
             // Convert markdown to HTML using marked.js
-            const htmlContent = marked.parse(content);
+            let htmlContent = marked.parse(content);
+            
+            // Strip empty paragraphs and extra spacing
+            // Remove <p><br></p>, <p></p>, <p> </p> (empty or whitespace-only paragraphs)
+            htmlContent = htmlContent.replace(/<p>\s*(<br\s*\/?>)?\s*<\/p>/gi, '');
             
             // Ensure the editor uses Calibri 11pt by default
             contentEditor.style.fontFamily = 'Calibri';
