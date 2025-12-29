@@ -815,6 +815,12 @@
                 // User is authenticated, proceed with draft creation
                 console.log('User authenticated, creating draft...');
                 
+                // Store email for future use (if not already stored)
+                if (userEmail && !localStorage.getItem('authenticatedUserEmail')) {
+                    localStorage.setItem('authenticatedUserEmail', userEmail);
+                    console.log('✅ Email stored for future use:', userEmail);
+                }
+                
                 // Use edited content from UI (preserves user's edits)
                 let htmlContent = contentEditor.innerHTML || '';
                 
