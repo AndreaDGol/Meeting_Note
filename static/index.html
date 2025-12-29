@@ -246,6 +246,15 @@
         </div>
     </div>
 
+    <!-- Custom Big Alert Modal -->
+    <div id="bigAlertModal" class="hidden fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-8 transform transition-all">
+            <div id="bigAlertMessage" class="text-center text-2xl font-medium text-gray-800 leading-relaxed">
+                <!-- Alert message will be inserted here -->
+            </div>
+        </div>
+    </div>
+
     <script>
         // Global variables
         let currentNoteId = null;
@@ -275,6 +284,26 @@
         const statsModal = document.getElementById('statsModal');
         const closeStatsModal = document.getElementById('closeStatsModal');
         const statsContent = document.getElementById('statsContent');
+        const bigAlertModal = document.getElementById('bigAlertModal');
+        const bigAlertMessage = document.getElementById('bigAlertMessage');
+
+        // Custom big alert function (replaces browser alert)
+        function showBigAlert(message, autoDismiss = true) {
+            bigAlertMessage.innerHTML = message;
+            bigAlertModal.classList.remove('hidden');
+            
+            // Auto-dismiss after 3 seconds
+            if (autoDismiss) {
+                setTimeout(() => {
+                    bigAlertModal.classList.add('hidden');
+                }, 3000);
+            }
+            
+            // Click anywhere to dismiss
+            bigAlertModal.onclick = () => {
+                bigAlertModal.classList.add('hidden');
+            };
+        }
 
         // Initialize app
         document.addEventListener('DOMContentLoaded', function() {
@@ -530,7 +559,7 @@
                 
                 // Show success message
                 setTimeout(() => {
-                    alert('✅ Authentication successful!\n\nYou can now click "Create Outlook Email" to create your draft.');
+                    showBigAlert('✅ Authentication successful!<br><br>You can now click "Create Outlook Email" to create your draft.');
                 }, 500);
             }
         })();
@@ -622,7 +651,7 @@
             const textContent = contentEditor.textContent || contentEditor.innerText || '';
             
             if (!textContent.trim()) {
-                alert('No content to send. Please upload and process a note first.');
+                showBigAlert('No content to send. Please upload and process a note first.');
                 return;
             }
             
@@ -767,7 +796,7 @@ ${styledHtml}
                     processAnotherBtn.classList.remove('hidden');
                     
                     // Show success message - no redirect, draft will appear in Outlook desktop
-                    alert('✅ Draft email created successfully!\n\nThe formatted note is now in your Outlook Drafts folder.\n\n📧 Switch to your Outlook desktop to view the draft.');
+                    showBigAlert('✅ Draft email created successfully!<br><br>The formatted note is now in your Outlook Drafts folder.<br><br>📧 Switch to your Outlook desktop to view the draft.');
                     
                     // Reset Create Outlook Email button after delay
                     setTimeout(() => {
@@ -789,7 +818,7 @@ ${styledHtml}
                 outlookEmailBtn.classList.add('bg-green-600');
                 outlookEmailBtn.disabled = false;
                 
-                alert('Failed to create Outlook draft. Please try again.\n\nError: ' + error.message);
+                showBigAlert('Failed to create Outlook draft. Please try again.<br><br>Error: ' + error.message);
             }
         }
         
@@ -797,7 +826,7 @@ ${styledHtml}
             const textContent = contentEditor.textContent || contentEditor.innerText || '';
             
             if (!textContent.trim()) {
-                alert('No content to copy');
+                showBigAlert('No content to copy');
                 return;
             }
             
@@ -902,7 +931,7 @@ ${styledHtml}
                     console.error('Fallback also failed:', fallbackError);
                 }
                 
-                alert('Copy failed. Please try again.');
+                showBigAlert('Copy failed. Please try again.');
             }
         }
         
@@ -940,7 +969,7 @@ ${styledHtml}
 
         async function handleFileUpload(file) {
             if (file.type !== 'application/pdf') {
-                alert('Please select a PDF file. Only PDF files are supported.');
+                showBigAlert('Please select a PDF file. Only PDF files are supported.');
                 return;
             }
             
@@ -1056,7 +1085,7 @@ ${styledHtml}
             } catch (error) {
                 console.error('Upload error:', error);
                 const errorMessage = error.message || 'Upload failed. Please try again.';
-                alert(errorMessage);
+                showBigAlert(errorMessage);
                 uploadProgress.classList.add('hidden');
             }
         }
@@ -1176,7 +1205,7 @@ ${styledHtml}
                 statsModal.classList.remove('hidden');
             } catch (error) {
                 console.error('Error loading statistics:', error);
-                alert('Failed to load statistics');
+                showBigAlert('Failed to load statistics');
             }
         }
     </script>
