@@ -798,10 +798,8 @@
                 // User is authenticated, proceed with draft creation
                 console.log('User authenticated, creating draft...');
                 
-                // For email draft, use ORIGINAL markdown (preserves spacing)
-                // Re-parse the original content WITHOUT tight spacing cleanup
-                let emailMarkdown = currentNoteContent || '';
-                let htmlContent = marked.parse(emailMarkdown);
+                // Use edited content from UI (preserves user's edits)
+                let htmlContent = contentEditor.innerHTML || '';
                 
                 const currentFont = 'Calibri';
                 const currentSize = '11';
