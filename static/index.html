@@ -30,7 +30,7 @@
         
         #contentEditor p {
             margin: 0 !important;  /* Zero spacing between paragraphs */
-            padding: 2px 0 !important;  /* Match email draft: 2px top/bottom */
+            padding: 0 !important;
             line-height: 1.15 !important;
         }
         
@@ -654,6 +654,14 @@
                 // Remove query parameter from URL
                 window.history.replaceState({}, document.title, window.location.pathname);
                 
+                // Permanently store authenticated email for future use
+                const savedEmail = localStorage.getItem('pendingAuthEmail');
+                if (savedEmail) {
+                    localStorage.setItem('authenticatedUserEmail', savedEmail);
+                    localStorage.removeItem('pendingAuthEmail'); // Clean up temp storage
+                    console.log('✅ Email permanently stored:', savedEmail);
+                }
+                
                 // Restore note if it was saved before auth
                 const savedNoteId = localStorage.getItem('pendingAuthNoteId');
                 if (savedNoteId) {
@@ -663,7 +671,7 @@
                 
                 // Show success message
                 setTimeout(() => {
-                    showBigAlert('✅ Authentication successful!<br><br>You can now click "Create Outlook Email" to create your draft.');
+                    showBigAlert('✅ Authentication successful!<br><br>Your email has been saved. You won\'t need to enter it again.<br><br>You can now click "Create Outlook Email" to create your draft.');
                 }, 500);
             }
         })();
@@ -763,11 +771,20 @@
             const originalHTML = outlookEmailBtn.innerHTML;
             
             try {
-                // Always prompt for email using custom modal (bigger text, better UX)
-                const userEmail = await showEmailInput('your.email@golconda.com');
+                // Check if user email is already stored from previous authentication
+                let userEmail = localStorage.getItem('authenticatedUserEmail');
+                
+                // Only prompt for email if not stored
                 if (!userEmail) {
-                    console.log('User cancelled email input');
-                    return;
+                    console.log('No stored email found, prompting user...');
+                    userEmail = await showEmailInput('your.email@golconda.com');
+                    if (!userEmail) {
+                        console.log('User cancelled email input');
+                        return;
+                    }
+                } else {
+                    console.log('Using stored email:', userEmail);
+                    console.log('💡 Tip: To use a different email, open browser console and run: localStorage.removeItem("authenticatedUserEmail")');
                 }
                 
                 // Check authentication status
@@ -1207,7 +1224,7 @@ ${styledHtml}
             // Load content in editor - convert markdown to HTML
             let content = note.content || '';
             
-            // Custom markdown converter - uses <p> tags to match email draft formatting
+            // Custom markdown converter (bypasses marked.js to avoid <p> tag spacing)
             function convertMarkdownToHTML(markdown) {
                 // Split into lines
                 let lines = markdown.split('\n');
@@ -1220,33 +1237,27 @@ ${styledHtml}
                     if (line.trim().endsWith(':')) {
                         // Add empty line before header (except first line)
                         if (i > 0) {
-                            result.push('<p style="margin: 0; padding: 2px 0;">&nbsp;</p>');
+                            result.push('<br>');
                         }
-                        // Make header bold and wrap in paragraph
-                        result.push('<p style="margin: 0; padding: 2px 0;"><strong>' + line + '</strong></p>');
+                        // Make header bold
+                        result.push('<strong>' + line + '</strong>');
                     }
-                    // Empty line
-                    else if (line.trim() === '') {
-                        result.push('<p style="margin: 0; padding: 2px 0;">&nbsp;</p>');
-                    }
-                    // Check if this is the signature (last standalone line)
+                    // Check if this is the signature (Michael, or any standalone name at end)
                     else if (i === lines.length - 1 && line.trim().length > 0 && !line.trim().startsWith('-')) {
                         // Add empty line before signature
-                        result.push('<p style="margin: 0; padding: 2px 0;">&nbsp;</p>');
-                        // Handle bold text **text**
-                        line = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-                        result.push('<p style="margin: 0; padding: 2px 0;">' + line + '</p>');
+                        result.push('<br>');
+                        result.push(line);
                     }
                     // Regular line
                     else {
                         // Handle bold text **text**
                         line = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-                        result.push('<p style="margin: 0; padding: 2px 0;">' + line + '</p>');
+                        result.push(line);
                     }
                 }
                 
-                // Join paragraphs directly (no separator needed)
-                return result.join('');
+                // Join with <br>
+                return result.join('<br>');
             }
             
             // Use custom converter for web UI display (tight spacing)
