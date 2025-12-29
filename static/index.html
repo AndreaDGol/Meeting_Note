@@ -250,6 +250,7 @@
         // Global variables
         let currentNoteId = null;
         let currentNoteContent = '';
+        let currentNoteFilename = '';
 
         // DOM elements
         const uploadArea = document.getElementById('uploadArea');
@@ -548,8 +549,10 @@
             // Clear editor content (right side)
             contentEditor.innerHTML = '<p class="text-gray-400">Your transcribed text will appear here... Upload a handwritten note to get started.</p>';
             
-            // Reset current note ID
+            // Reset current note ID and content
             currentNoteId = null;
+            currentNoteContent = '';
+            currentNoteFilename = '';
             
             // Hide Process Another button
             processAnotherBtn.classList.add('hidden');
@@ -575,6 +578,41 @@
         
         // Add click handler for Process Another button
         processAnotherBtn.addEventListener('click', processAnotherNote);
+        
+        // Helper function to extract main topic from filename
+        function extractMainTopic(filename) {
+            if (!filename) return 'Meeting';
+            
+            // Remove .pdf extension
+            let topic = filename.replace(/\.pdf$/i, '');
+            
+            // Extract part before " - " (hyphen) or before "Zoom meeting"
+            // Example: "Centura Wealth - Zoom meeting notes (9-11-24, 11-53 AM)" -> "Centura Wealth"
+            const match = topic.match(/^([^-]+?)(?:\s*-\s*(?:Zoom|zoom|Meeting|meeting)|$)/);
+            if (match && match[1]) {
+                topic = match[1].trim();
+            }
+            
+            return topic || 'Meeting';
+        }
+        
+        // Helper function to extract and format date from content
+        function extractFormattedDate(content) {
+            if (!content) return null;
+            
+            // Look for "Date: M/D" or "Date: MM/DD" pattern
+            const dateMatch = content.match(/Date:\s*(\d{1,2})\/(\d{1,2})/i);
+            
+            if (dateMatch) {
+                const month = dateMatch[1].padStart(2, '0');
+                const day = dateMatch[2].padStart(2, '0');
+                const year = new Date().getFullYear();
+                
+                return `${month}.${day}.${year}`;
+            }
+            
+            return null;
+        }
         
         async function createOutlookEmail() {
             console.log('✅ GRAPH API VERSION - Dec 24 2024 - Using Microsoft Graph API (NOT mailto)');
@@ -677,8 +715,16 @@ ${styledHtml}
 </body>
 </html>`;
                 
-                // Subject for the email
-                const subject = 'Processed Meeting Notes';
+                // Subject for the email - dynamic based on filename and date
+                const mainTopic = extractMainTopic(currentNoteFilename);
+                const formattedDate = extractFormattedDate(currentNoteContent);
+                
+                let subject = 'Meeting Notes';
+                if (mainTopic && formattedDate) {
+                    subject = `Meeting Notes - ${mainTopic} - ${formattedDate}`;
+                } else if (mainTopic) {
+                    subject = `Meeting Notes - ${mainTopic}`;
+                }
                 
                 // Show loading state
                 outlookEmailBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Creating Draft...';
@@ -1038,6 +1084,7 @@ ${styledHtml}
             
             contentEditor.innerHTML = htmlContent;
             currentNoteContent = note.content || '';
+            currentNoteFilename = note.original_filename || '';
             isDirty = false;
             
             // Show toolbar and action buttons
@@ -1060,6 +1107,7 @@ ${styledHtml}
             outlookEmailBtn.classList.add('hidden');
             currentNoteId = null;
             currentNoteContent = '';
+            currentNoteFilename = '';
             updateWordCount();
         }
 
