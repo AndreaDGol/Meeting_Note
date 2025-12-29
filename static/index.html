@@ -17,28 +17,47 @@
             transform: translateY(-2px);
             box-shadow: 0 10px 25px rgba(0,0,0,0.1);
         }
-        /* Tighter spacing in editor - remove all visual gaps */
+        /* Tight spacing in editor with proper CSS margins */
+        #contentEditor {
+            font-family: Calibri, sans-serif;
+            font-size: 11pt;
+            line-height: 1.2 !important;
+            padding: 10px;
+            border: 1px solid #ddd;
+            min-height: 300px;
+            white-space: pre-wrap;
+        }
+        
         #contentEditor p {
-            margin: 0 !important;
+            margin: 0 !important;  /* Zero spacing between paragraphs */
             padding: 0 !important;
-            line-height: 1.4 !important;
+            line-height: 1.15 !important;
         }
-        #contentEditor br {
-            display: none !important; /* Hide <br> tags that create blank lines */
-        }
+        
         #contentEditor ul,
         #contentEditor ol {
-            margin: 0 !important;
-            padding-left: 20px !important;
+            margin: 0 !important;  /* Zero spacing for lists */
+            padding-left: 1.5em !important;
         }
+        
         #contentEditor li {
             margin: 0 !important;
             padding: 0 !important;
-            line-height: 1.4 !important;
+            line-height: 1.15 !important;
         }
-        #contentEditor b,
-        #contentEditor strong {
+        
+        #contentEditor strong,
+        #contentEditor b {
             font-weight: bold;
+        }
+        
+        /* Remove extra spacing from first/last elements */
+        #contentEditor > *:first-child {
+            margin-top: 0 !important;
+        }
+        
+        #contentEditor > *:last-child {
+            margin-bottom: 0 !important;
         }
         .upload-area {
             border: 2px dashed #cbd5e0;
