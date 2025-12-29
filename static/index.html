@@ -150,10 +150,10 @@
                         <p class="text-sm text-gray-600">Edit and format your transcribed text</p>
                     </div>
                     <div class="flex items-center space-x-2">
-                        <button id="outlookEmailBtn" class="hidden bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition flex items-center">
+                        <button id="outlookEmailBtn" class="hidden bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition flex items-center">
                             <i class="fas fa-envelope mr-2"></i>Create Outlook Email
                         </button>
-                        <button id="processAnotherBtn" class="hidden bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition flex items-center">
+                        <button id="processAnotherBtn" class="hidden bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition flex items-center">
                             <i class="fas fa-file-pdf mr-2"></i>Process Another Note
                         </button>
                         <button id="copyBtn" class="hidden bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition flex items-center">
@@ -282,7 +282,7 @@
     <!-- Custom Big Alert Modal -->
     <div id="bigAlertModal" class="hidden fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-8 transform transition-all">
-            <div id="bigAlertMessage" class="text-center text-2xl font-medium text-gray-800 leading-relaxed">
+            <div id="bigAlertMessage" class="text-center text-base font-medium text-gray-800 leading-relaxed">
                 <!-- Alert message will be inserted here -->
             </div>
         </div>
@@ -622,8 +622,8 @@
             // Reset Create Outlook Email button
             outlookEmailBtn.classList.add('hidden');
             outlookEmailBtn.innerHTML = '<i class="fas fa-envelope mr-2"></i>Create Outlook Email';
-            outlookEmailBtn.classList.remove('bg-green-500');
-            outlookEmailBtn.classList.add('bg-green-600');
+            outlookEmailBtn.classList.remove('bg-blue-500');
+            outlookEmailBtn.classList.add('bg-blue-600');
             outlookEmailBtn.disabled = false;
             
             // Hide copy button
@@ -822,8 +822,8 @@ ${styledHtml}
                     
                     // Show success message
                     outlookEmailBtn.innerHTML = '<i class="fas fa-check mr-2"></i>Draft Created!';
-                    outlookEmailBtn.classList.remove('bg-green-600');
-                    outlookEmailBtn.classList.add('bg-green-500');
+                    outlookEmailBtn.classList.remove('bg-blue-600');
+                    outlookEmailBtn.classList.add('bg-blue-500');
                     
                     // Show "Process Another Note" button
                     processAnotherBtn.classList.remove('hidden');
@@ -834,8 +834,8 @@ ${styledHtml}
                     // Reset Create Outlook Email button after delay
                     setTimeout(() => {
                         outlookEmailBtn.innerHTML = originalHTML;
-                        outlookEmailBtn.classList.remove('bg-green-500');
-                        outlookEmailBtn.classList.add('bg-green-600');
+                        outlookEmailBtn.classList.remove('bg-blue-500');
+                        outlookEmailBtn.classList.add('bg-blue-600');
                         outlookEmailBtn.disabled = false;
                     }, 3000);
                 } else {
@@ -847,8 +847,8 @@ ${styledHtml}
                 
                 // Reset button
                 outlookEmailBtn.innerHTML = originalHTML || '<i class="fas fa-envelope mr-2"></i>Create Outlook Email';
-                outlookEmailBtn.classList.remove('bg-green-500');
-                outlookEmailBtn.classList.add('bg-green-600');
+                outlookEmailBtn.classList.remove('bg-blue-500');
+                outlookEmailBtn.classList.add('bg-blue-600');
                 outlookEmailBtn.disabled = false;
                 
                 showBigAlert('Failed to create Outlook draft. Please try again.<br><br>Error: ' + error.message);
