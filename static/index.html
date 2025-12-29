@@ -1140,20 +1140,38 @@ ${styledHtml}
             
             // Custom markdown converter (bypasses marked.js to avoid <p> tag spacing)
             function convertMarkdownToHTML(markdown) {
-                // First, handle bold text **text** or __text__
-                let html = markdown.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-                html = html.replace(/__(.*?)__/g, '<strong>$1</strong>');
+                // Split into lines
+                let lines = markdown.split('\n');
+                let result = [];
                 
-                // Handle headers (lines ending with :)
-                html = html.replace(/^(.+):$/gm, '<strong>$1:</strong>');
+                for (let i = 0; i < lines.length; i++) {
+                    let line = lines[i];
+                    
+                    // Check if this line is a header (ends with :)
+                    if (line.trim().endsWith(':')) {
+                        // Add empty line before header (except first line)
+                        if (i > 0) {
+                            result.push('<br>');
+                        }
+                        // Make header bold
+                        result.push('<strong>' + line + '</strong>');
+                    }
+                    // Check if this is the signature (Michael, or any standalone name at end)
+                    else if (i === lines.length - 1 && line.trim().length > 0 && !line.trim().startsWith('-')) {
+                        // Add empty line before signature
+                        result.push('<br>');
+                        result.push(line);
+                    }
+                    // Regular line
+                    else {
+                        // Handle bold text **text**
+                        line = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                        result.push(line);
+                    }
+                }
                 
-                // Convert single line breaks to <br>
-                html = html.replace(/\n/g, '<br>');
-                
-                // Remove double <br> (empty lines)
-                html = html.replace(/<br>\s*<br>/g, '<br>');
-                
-                return html;
+                // Join with <br>
+                return result.join('<br>');
             }
             
             // Use custom converter for web UI display (tight spacing)
