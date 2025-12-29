@@ -665,8 +665,11 @@
                 // User is authenticated, proceed with draft creation
                 console.log('User authenticated, creating draft...');
                 
-                // Get HTML content and format it
-                let htmlContent = contentEditor.innerHTML || '';
+                // For email draft, use ORIGINAL markdown (preserves spacing)
+                // Re-parse the original content WITHOUT tight spacing cleanup
+                let emailMarkdown = currentNoteContent || '';
+                let htmlContent = marked.parse(emailMarkdown);
+                
                 const currentFont = 'Calibri';
                 const currentSize = '11';
                 
@@ -1073,10 +1076,6 @@ ${styledHtml}
             // Load content in editor - convert markdown to HTML
             let content = note.content || '';
             
-            // FIRST: Clean the raw markdown to remove ALL extra newlines
-            // Replace 2+ consecutive newlines with just 1 (tight spacing, no blank lines)
-            content = content.replace(/\n{2,}/g, '\n');
-            
             // Configure marked.js options
             marked.setOptions({
                 breaks: true,  // Convert line breaks to <br>
@@ -1085,6 +1084,12 @@ ${styledHtml}
             
             // Convert markdown to HTML using marked.js
             let htmlContent = marked.parse(content);
+            
+            // FOR WEB UI ONLY: Remove extra spacing by collapsing multiple <br> tags
+            // This tightens display without affecting the source content (email draft uses original)
+            htmlContent = htmlContent
+                .replace(/(<br\s*\/?>){2,}/gi, '<br>')           // Multiple <br> → single <br>
+                .replace(/<\/p>\s*<p>/gi, '</p><p>');            // Remove space between paragraphs
             
             // THEN: Strip any remaining empty paragraphs from HTML
             // Remove various forms of empty paragraphs
