@@ -665,14 +665,32 @@
                 // Restore note if it was saved before auth
                 const savedNoteId = localStorage.getItem('pendingAuthNoteId');
                 if (savedNoteId) {
-                    loadNote(parseInt(savedNoteId));
+                    // Fetch note from API and restore display
+                    fetch(`/api/notes/${savedNoteId}`)
+                        .then(response => response.json())
+                        .then(note => {
+                            displayNote(note);
+                            console.log('✅ Note restored after authentication');
+                            
+                            // Show success message after note is loaded
+                            setTimeout(() => {
+                                showBigAlert('✅ Authentication successful!<br><br>Your email has been saved. You won\'t need to enter it again.<br><br>You can now click "Create Outlook Email" to create your draft.');
+                            }, 500);
+                        })
+                        .catch(error => {
+                            console.error('Failed to restore note:', error);
+                            // Show success message even if note restoration fails
+                            setTimeout(() => {
+                                showBigAlert('✅ Authentication successful!<br><br>Your email has been saved. You won\'t need to enter it again.<br><br>Please upload your note again to create the draft.');
+                            }, 500);
+                        });
                     localStorage.removeItem('pendingAuthNoteId');
+                } else {
+                    // No note to restore, just show success message
+                    setTimeout(() => {
+                        showBigAlert('✅ Authentication successful!<br><br>Your email has been saved. You won\'t need to enter it again.<br><br>You can now click "Create Outlook Email" to create your draft.');
+                    }, 500);
                 }
-                
-                // Show success message
-                setTimeout(() => {
-                    showBigAlert('✅ Authentication successful!<br><br>Your email has been saved. You won\'t need to enter it again.<br><br>You can now click "Create Outlook Email" to create your draft.');
-                }, 500);
             }
         })();
         
