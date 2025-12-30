@@ -226,6 +226,61 @@ class MicrosoftGraphService:
             logger.error(error_msg)
             raise Exception(error_msg)
     
+    def add_attachment_to_draft(
+        self,
+        access_token: str,
+        draft_id: str,
+        file_content: bytes,
+        filename: str
+    ) -> Dict[str, Any]:
+        """
+        Add file attachment to existing draft email
+        
+        Args:
+            access_token: Valid OAuth access token
+            draft_id: ID of the draft email
+            file_content: Binary content of the file
+            filename: Name of the file with extension
+            
+        Returns:
+            Attachment details
+            
+        Raises:
+            Exception: If adding attachment fails
+        """
+        import base64
+        
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type": "application/json"
+        }
+        
+        # Encode file content to base64
+        file_base64 = base64.b64encode(file_content).decode('utf-8')
+        
+        # Prepare attachment data
+        attachment_data = {
+            "@odata.type": "#microsoft.graph.fileAttachment",
+            "name": filename,
+            "contentBytes": file_base64
+        }
+        
+        # Add attachment using Graph API
+        response = requests.post(
+            f"{self.graph_endpoint}/me/messages/{draft_id}/attachments",
+            headers=headers,
+            json=attachment_data
+        )
+        
+        if response.status_code == 201:
+            attachment = response.json()
+            logger.info(f"Successfully added attachment '{filename}' to draft {draft_id}")
+            return attachment
+        else:
+            error_msg = f"Failed to add attachment: {response.status_code} - {response.text}"
+            logger.error(error_msg)
+            raise Exception(error_msg)
+    
     def get_user_profile(self, access_token: str) -> Dict[str, Any]:
         """
         Get authenticated user's profile information

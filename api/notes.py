@@ -418,9 +418,11 @@ async def create_outlook_draft_endpoint(
     subject: str = Form(...),
     html_content: str = Form(...),
     user_email: str = Form(...),
+    note_id: int = Form(...),
+    db: Session = Depends(get_db),
     auth_service: MicrosoftAuthService = Depends(get_microsoft_auth_service)
 ):
-    """Creates an Outlook draft email using Microsoft Graph API."""
+    """Creates an Outlook draft email using Microsoft Graph API with PDF attachment."""
     try:
         token_result = auth_service.acquire_token_silent(user_email)
         if not token_result or "access_token" not in token_result:
@@ -435,9 +437,29 @@ async def create_outlook_draft_endpoint(
             html_body=html_content
         )
         
-        # Generate Outlook URLs
         draft_id = draft_info["draft_id"]
         
+        # Get note from database to retrieve PDF file
+        note = storage_service.get_note(db, note_id)
+        if note and note.file_path and os.path.exists(note.file_path):
+            try:
+                # Read PDF file
+                with open(note.file_path, 'rb') as f:
+                    pdf_content = f.read()
+                
+                # Add PDF as attachment to the draft
+                microsoft_graph_service.add_attachment_to_draft(
+                    access_token=access_token,
+                    draft_id=draft_id,
+                    file_content=pdf_content,
+                    filename=note.original_filename
+                )
+                logger.info(f"Added PDF attachment '{note.original_filename}' to draft {draft_id}")
+            except Exception as attach_error:
+                logger.error(f"Failed to attach PDF: {str(attach_error)}")
+                # Continue even if attachment fails - draft is still created
+        
+        # Generate Outlook URLs
         # Desktop Outlook deep link
         outlook_desktop_url = f"outlook:message/{draft_id}"
         

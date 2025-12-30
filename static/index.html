@@ -828,10 +828,11 @@
                 const currentSize = '11';
                 
                 // Remove AI-generated title (first heading like "Bain Meeting Summary")
-                // Strip first <h1>, <h2>, <h3>, or large bold text at the beginning
+                // Strip markdown headings (# Title) and HTML heading tags
                 htmlContent = htmlContent
-                    .replace(/^<h[1-6][^>]*>.*?<\/h[1-6]>/i, '')              // Remove first heading tag
-                    .replace(/^<p[^>]*><b[^>]*>.*?Summary.*?<\/b><\/p>/i, '') // Remove "...Summary" bold paragraph
+                    .replace(/^<p[^>]*>\s*#[^<]*<\/p>/i, '')                          // Remove markdown heading (# Title)
+                    .replace(/^<h[1-6][^>]*>.*?<\/h[1-6]>/i, '')                      // Remove first HTML heading tag
+                    .replace(/^<p[^>]*><b[^>]*>.*?Summary.*?<\/b><\/p>/i, '')        // Remove "...Summary" bold paragraph
                     .replace(/^<p[^>]*><strong[^>]*>.*?Summary.*?<\/strong><\/p>/i, ''); // Remove strong variant
                 
                 // Normalize HTML tags
@@ -900,6 +901,7 @@ ${styledHtml}
                 formData.append('subject', subject);
                 formData.append('html_content', emailHtml);
                 formData.append('user_email', userEmail);
+                formData.append('note_id', currentNoteId.toString());
                 
                 console.log('Sending request to create draft...');
                 const response = await fetch('/api/create-draft', {
