@@ -422,7 +422,10 @@
             uploadArea.addEventListener('dragleave', handleDragLeave);
             uploadArea.addEventListener('drop', handleDrop);
             fileInput.addEventListener('change', handleFileSelect);
-            uploadBtn.addEventListener('click', () => fileInput.click());
+            uploadBtn.addEventListener('click', (e) => {
+                e.stopPropagation();  // Prevent bubbling to uploadArea
+                fileInput.click();
+            });
 
             // Editor - handle placeholder for contenteditable
             contentEditor.addEventListener('input', () => {
@@ -727,7 +730,7 @@
             copyBtn.classList.add('hidden');
             
             // Reset word count
-            wordCountDisplay.textContent = '0 words';
+            wordCount.textContent = '0 words';
             
             // Clear file input
             fileInput.value = '';
