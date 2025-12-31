@@ -1270,8 +1270,7 @@ ${styledHtml}
                     }
                     // Check if this is the signature (Michael, or any standalone name at end)
                     else if (i === lines.length - 1 && line.trim().length > 0 && !line.trim().startsWith('-')) {
-                        // Add empty line before signature
-                        result.push('<br>');
+                        // Add signature directly without extra spacing
                         result.push(line);
                     }
                     // Regular line
