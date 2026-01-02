@@ -908,9 +908,9 @@ ${styledHtml}
                 
                 let subject = 'Meeting Notes';
                 if (mainTopic && formattedDate) {
-                    subject = `Meeting Notes - ${mainTopic} - ${formattedDate}`;
+                    subject = `${mainTopic}  Meeting Notes  ${formattedDate}`;
                 } else if (mainTopic) {
-                    subject = `Meeting Notes - ${mainTopic}`;
+                    subject = `${mainTopic}  Meeting Notes`;
                 }
                 
                 // Show loading state
@@ -1273,11 +1273,22 @@ ${styledHtml}
                     }
                     // Check if this is the signature (Michael, or any standalone name at end)
                     else if (i === lines.length - 1 && line.trim().length > 0 && !line.trim().startsWith('-')) {
-                        // Add signature directly without extra spacing
+                        // Add three blank lines before signature
+                        result.push('<br>');
+                        result.push('<br>');
+                        result.push('<br>');
                         result.push(line);
                     }
                     // Regular line
                     else {
+                        // Check if line is a bullet point (starts with -, •, or *)
+                        if (line.trim().match(/^[-•*]\s/)) {
+                            // Extract content after the bullet
+                            const content = line.trim().replace(/^[-•*]\s+/, '');
+                            // Format as: two spaces, dash, two spaces, content
+                            line = `  -  ${content}`;
+                        }
+                        
                         // Handle bold text **text**
                         line = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
                         result.push(line);
