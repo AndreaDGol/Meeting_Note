@@ -1289,10 +1289,27 @@ ${styledHtml}
                              !line.trim().match(/^[-•*]\s/)) {  // Not a bullet
                         const strippedLine = line.trim().replace(/^\*\*(.+)\*\*$/, '$1');  // Remove **...**
                         if (strippedLine === 'Michael') {
-                            // Add three blank lines before signature
-                            result.push('<br>');
-                            result.push('<br>');
-                            result.push('<br>');
+                            // Count how many blank lines already exist before Michael in AI output
+                            // These blank lines are already in result array as empty strings
+                            let blankLinesBefore = 0;
+                            for (let j = i - 1; j >= 0 && j >= i - 5; j--) {  // Check up to 5 lines back
+                                if (lines[j].trim() === '') {
+                                    blankLinesBefore++;
+                                } else {
+                                    break;  // Stop at first non-blank line
+                                }
+                            }
+                            
+                            // When joining with <br>, each empty string in result creates one <br>
+                            // We want exactly 3 <br> tags total before Michael
+                            // So if AI already has blankLinesBefore empty strings, we need (3 - blankLinesBefore) more
+                            const linesToAdd = Math.max(0, 3 - blankLinesBefore);
+                            
+                            // Add empty strings (which will create <br> when joined) to reach 3 total
+                            for (let k = 0; k < linesToAdd; k++) {
+                                result.push('');  // Empty string creates <br> when joined, consistent with AI's blank lines
+                            }
+                            
                             result.push(line);
                         } else {
                             // Not a signature, treat as regular line
