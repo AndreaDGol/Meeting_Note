@@ -1308,8 +1308,9 @@ ${styledHtml}
                         if (line.trim().match(/^[-•*]\s/) && !line.trim().endsWith(':')) {
                             // Extract content after the bullet
                             const content = line.trim().replace(/^[-•*]\s+/, '');
-                            // Format as: two spaces, dash, two spaces, content
-                            line = `  -  ${content}`;
+                            // Format as: two non-breaking spaces, dash, two non-breaking spaces, content
+                            // Use &nbsp; to ensure spacing is preserved in email clients
+                            line = `&nbsp;&nbsp;-&nbsp;&nbsp;${content}`;
                         }
                         
                         // Handle bold text **text**
