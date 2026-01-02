@@ -1281,17 +1281,25 @@ ${styledHtml}
                         result.push('<strong>' + line + '</strong>');
                     }
                     // Check if this is a signature (standalone name like "Michael")
+                    // Strip bold markdown first to detect **Michael** as well as Michael
                     else if (line.trim().length > 0 && 
                              line.trim().length < 20 &&  // Short line
                              !line.trim().startsWith('-') && 
                              !line.trim().endsWith(':') &&
-                             !line.trim().match(/^[-•*]\s/) &&  // Not a bullet
-                             (line.trim() === 'Michael' || line.trim().match(/^[A-Z][a-z]+$/))) {  // Name pattern
-                        // Add three blank lines before signature
-                        result.push('<br>');
-                        result.push('<br>');
-                        result.push('<br>');
-                        result.push(line);
+                             !line.trim().match(/^[-•*]\s/)) {  // Not a bullet
+                        const strippedLine = line.trim().replace(/^\*\*(.+)\*\*$/, '$1');  // Remove **...**
+                        if (strippedLine === 'Michael' || strippedLine.match(/^[A-Z][a-z]+$/)) {
+                            // Add three blank lines before signature
+                            result.push('<br>');
+                            result.push('<br>');
+                            result.push('<br>');
+                            result.push(line);
+                        } else {
+                            // Not a signature, treat as regular line
+                            // Handle bold text **text**
+                            line = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                            result.push(line);
+                        }
                     }
                     // Regular line
                     else {
