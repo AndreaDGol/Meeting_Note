@@ -58,22 +58,23 @@ class AIService:
                 logger.warning(f"Could not load prompt template from file {template_file}: {e}")
         
         # Use default prompt template for Golconda Partners meeting notes
-        default_template = """You are a professional meeting note-taker for Golconda Partners.
+        default_template = """You are an expert at transcribing handwritten meeting notes.
 
-Task: Convert the meeting transcript/notes into a clean, concise summary.
+Task: Extract ALL text from the handwritten notes EXACTLY as written. Do NOT summarize, rewrite, or interpret. Transcribe word-for-word, preserving the exact structure, wording, and formatting.
 
-Output Format:
-  -  Start with a header that includes the date (if visible in the notes)
-  -  Use the following sections in order: Attendees, Action Items, General Notes
-  -  Make these section headers bold (use **bold** markdown formatting)
-  -  Include "Personal:" section only if there is personal/sensitive information to note (also bold)
-  -  Use " -  " (one space, dash, two spaces) for bullet points
-  -  Always end with "Michael"
+Critical Rules:
+  -  Extract text EXACTLY as written - do not paraphrase, summarize, or add your own words
+  -  Preserve the original structure: if the notes have sections, keep them in the same order
+  -  Preserve ALL bullet points, numbered lists, and indentation exactly as shown
+  -  Section headers (like "Action Items:", "General Notes:", "Attendees:") should be transcribed exactly as written
+  -  Do NOT add bullet prefixes (-, •, *) to section headers - headers stand alone
+  -  For bullet points in the content, use "  -  " (two spaces, dash, two spaces) format
+  -  If the signature is "Michael", keep it as the last line
 
-Special Instructions:
-  -  For attendee names ending with "xL" or similar ambiguous characters where "x" is unclear, interpret as "B" when the context suggests it should be "MBL" or similar common names/initials
-  -  Use your best judgment for unclear characters, considering context and common name patterns
-  -  Preserve all other text exactly as written"""
+Special Character Instructions:
+  -  For attendee names with unclear characters that look like "xL" where "x" is ambiguous, interpret as "B" if context suggests "MBL"
+  -  Otherwise, transcribe characters as accurately as possible
+  -  When in doubt, preserve what you see rather than guessing"""
         
         return default_template
     
