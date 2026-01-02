@@ -1280,8 +1280,13 @@ ${styledHtml}
                         // Make header bold
                         result.push('<strong>' + line + '</strong>');
                     }
-                    // Check if this is the signature (Michael, or any standalone name at end)
-                    else if (i === lines.length - 1 && line.trim().length > 0 && !line.trim().startsWith('-')) {
+                    // Check if this is a signature (standalone name like "Michael")
+                    else if (line.trim().length > 0 && 
+                             line.trim().length < 20 &&  // Short line
+                             !line.trim().startsWith('-') && 
+                             !line.trim().endsWith(':') &&
+                             !line.trim().match(/^[-•*]\s/) &&  // Not a bullet
+                             (line.trim() === 'Michael' || line.trim().match(/^[A-Z][a-z]+$/))) {  // Name pattern
                         // Add three blank lines before signature
                         result.push('<br>');
                         result.push('<br>');
@@ -1291,7 +1296,8 @@ ${styledHtml}
                     // Regular line
                     else {
                         // Check if line is a bullet point (starts with -, •, or *)
-                        if (line.trim().match(/^[-•*]\s/)) {
+                        // BUT skip if it's a header (ends with :)
+                        if (line.trim().match(/^[-•*]\s/) && !line.trim().endsWith(':')) {
                             // Extract content after the bullet
                             const content = line.trim().replace(/^[-•*]\s+/, '');
                             // Format as: two spaces, dash, two spaces, content
